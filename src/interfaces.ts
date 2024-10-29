@@ -14,11 +14,11 @@ export interface Vertex
     z: number
 }
 
-export interface VertexGroup
+export interface GroupedVertex
 {
-    x: number
-    y: number
     z: number
+    group_ids: number[]
+    minima_id?: number
 }
 
 export interface LineArea
@@ -38,5 +38,6 @@ interface WatershedArea
 
 export interface Watershed
 {
-    areas: WatershedArea[]
+    vertices: GroupedVertex[]
+    area_count: number
 }

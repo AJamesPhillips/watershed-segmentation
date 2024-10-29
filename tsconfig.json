@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "target": "es6", // Specify ECMAScript target version
+        "lib": ["es2016", "dom"],
         "module": "ES6", // Specify module code generation
         "outDir": "./dist", // Redirect output structure to the directory
         "rootDir": "./src", // Specify the root directory of input files
