@@ -1,18 +1,25 @@
-import { WatershedData, Watershed, Vertex, LineArea, GroupedVertex } from "./interfaces"
+import { WatershedData, Watershed, Vertex, GroupedVertex } from "./interfaces"
 
 
-export async function get_watershed_from_image(canvas_el: HTMLCanvasElement, img_url: string, minimum_minima_area: number = 20, magnify: number = 1) //: Promise<Watershed>
+export async function get_watershed_from_image(canvas_el: HTMLCanvasElement, img_url: string, minimum_minima_area: number = 20): Promise<Watershed>
+{
+    const data = await load_image_and_extract_data(canvas_el, img_url)
+    const watershed = construct_watershed(data, minimum_minima_area)
+
+    return watershed
+}
+
+async function show_watershed_from_image(canvas_el: HTMLCanvasElement, img_url: string, minimum_minima_area: number = 20, magnify: number = 1) //: Promise<Watershed>
 {
     const data = await load_image_and_extract_data(canvas_el, img_url, magnify)
     const watershed = construct_watershed(data, minimum_minima_area)
-    console.log("watershed", watershed)
 
     const context = canvas_el.getContext("2d")!
     draw_group_colours_onto_canvas(watershed, data, context, 1)
 }
 
 
-export async function get_watershed_from_data(canvas_el: HTMLCanvasElement, data: WatershedData, minimum_minima_area: number = 20, magnify: number = 50) //: Promise<Watershed>
+async function show_watershed_from_data(canvas_el: HTMLCanvasElement, data: WatershedData, minimum_minima_area: number = 20, magnify: number = 50) //: Promise<Watershed>
 {
     const context = canvas_el.getContext("2d")!
 
@@ -91,10 +98,10 @@ function extract_image_data(canvas_el: HTMLCanvasElement, image: HTMLImageElemen
 }
 
 
-function construct_watershed(data: WatershedData, minimum_minima_area: number): Watershed
+export function construct_watershed(data: WatershedData, minimum_minima_area: number = 1): Watershed
 {
     const watershed = watershed_segmentation(data)
-    const normalised_watershed = normalise_watershed_group_ids(watershed)
+    normalise_watershed_group_ids(watershed)
 
     return watershed
 }
@@ -132,131 +139,7 @@ function factory_get_2d_array_value<U>(data: { image_data: U[], width: number, h
 }
 
 
-export function get_local_minima_candidate_lines_from_image_data(data: WatershedData): LineArea[][]
-{
-    const { image_data, width, height } = data
-
-    const local_minima_candidate_lines: LineArea[][] = Array(height).fill(null).map(() => [])
-    const get_pixel_value = factory_get_2d_array_value(data as any) as (x: number, y: number) => number | null
-
-    let last_vertex_on_same_line: Vertex | null = null
-    let start_line: Vertex | null = null
-
-    iterate_2d_data<number>(data as any, (x, y, z) =>
-    {
-        const vertex = { x, y, z }
-
-        // Check 8 neighbors
-        const neighbors = [
-            get_pixel_value(x - 1, y - 1), // top-left
-            get_pixel_value(x, y - 1),     // top
-            get_pixel_value(x + 1, y - 1), // top-right
-            get_pixel_value(x - 1, y),     // left
-            get_pixel_value(x + 1, y),     // right
-            get_pixel_value(x - 1, y + 1), // bottom-left
-            get_pixel_value(x, y + 1),     // bottom
-            get_pixel_value(x + 1, y + 1)  // bottom-right
-        ]
-
-        const potential_local_minima = neighbors.every(neighbor => neighbor === null || neighbor >= z)
-        const got_to_end_of_row = x === width - 1
-
-        // const debug_log_condition = y == 2
-        // debug_log_condition && console.log(x, "potential_local_minima", potential_local_minima, "got_to_end_of_row", got_to_end_of_row, start_line, last_vertex_on_same_line)
-
-        if (!start_line && potential_local_minima)
-        {
-            // debug_log_condition && console.log("set start_line")
-            start_line = vertex
-        }
-        else if (!potential_local_minima && start_line && last_vertex_on_same_line)
-        {
-            const new_candidate_line: LineArea = {
-                start: start_line,
-                end: last_vertex_on_same_line,
-                total_area: last_vertex_on_same_line.x - start_line.x + 1,
-            }
-            local_minima_candidate_lines[y].push(new_candidate_line)
-            // debug_log_condition && console.log("add new_candidate_line when !potential_local_minima", new_candidate_line)
-
-            start_line = null
-        }
-        else if (got_to_end_of_row && start_line)
-        {
-            const new_candidate_line: LineArea = {
-                start: start_line,
-                end: vertex,
-                total_area: vertex.x - start_line.x + 1,
-            }
-            local_minima_candidate_lines[y].push(new_candidate_line)
-            // debug_log_condition && console.log("add new_candidate_line when got_to_end_of_row", new_candidate_line)
-
-            start_line = null
-        }
-
-        last_vertex_on_same_line = vertex
-        if (got_to_end_of_row)
-        {
-            start_line = null
-            last_vertex_on_same_line = null
-        }
-    })
-
-    return local_minima_candidate_lines
-}
-
-
-export function condense_local_minima_candidate_lines(lines: LineArea[][]): LineArea[][]
-{
-    const cloned_lines = JSON.parse(JSON.stringify(lines)) as LineArea[][]
-
-    cloned_lines.forEach((current_row_lines, y) =>
-    {
-        if (y === 0) return
-
-        current_row_lines.forEach(new_candidate_line =>
-        {
-            // Check if the previous row has any lines which overlap with
-            // this line, and if so, remove them from the previous row
-            const previous_row_lines = cloned_lines[y - 1]
-            for (let j = 0; j < previous_row_lines.length; ++j)
-            {
-                const previous_line = previous_row_lines[j]
-                if (previous_line.start.x <= new_candidate_line.end.x && previous_line.end.x >= new_candidate_line.start.x)
-                {
-                    new_candidate_line.total_area += previous_line.total_area
-                    previous_row_lines.splice(j, 1)
-                    j--
-                }
-            }
-        })
-    })
-
-    return cloned_lines
-}
-
-
-export function convert_minima_lines_to_vertices(local_minima_lines: LineArea[][], minimum_minima_area: number): Vertex[]
-{
-    const local_minima: Vertex[] = []
-
-    local_minima_lines.forEach((lines, y) =>
-    {
-        for (let i = 0; i < lines.length; ++i)
-        {
-            const line = lines[i]
-            if (line.total_area >= minimum_minima_area)
-            {
-                local_minima.push(line.start)
-            }
-        }
-    })
-
-    return local_minima
-}
-
-
-export function watershed_segmentation(data: WatershedData): Watershed
+function watershed_segmentation(data: WatershedData): Watershed
 {
     let next_group_id = 0
     const minima: (GroupedVertex & Vertex)[] = []
@@ -355,24 +238,24 @@ export function watershed_segmentation(data: WatershedData): Watershed
 }
 
 
-function normalise_watershed_group_ids(watershed: Watershed): Watershed
+function normalise_watershed_group_ids(watershed: Watershed)
 {
     const group_id_map = new Map<number, number>()
-    let next_group_id = 0
+
+    const minimas = watershed.vertices.filter(vertex => vertex.minima_id !== undefined)
+    minimas.sort((a, b) => a.z - b.z)
+    minimas.forEach((minima, index) =>
+    {
+        group_id_map.set(minima.minima_id!, index)
+    })
 
     watershed.vertices.forEach(vertex =>
     {
         vertex.group_ids = vertex.group_ids.map(group_id =>
         {
-            if (!group_id_map.has(group_id))
-            {
-                group_id_map.set(group_id, next_group_id++)
-            }
             return group_id_map.get(group_id)!
         })
     })
-
-    return watershed
 }
 
 
@@ -414,19 +297,8 @@ function draw_group_colours_onto_canvas(watershed: Watershed, data: WatershedDat
 }
 
 
-const COLOURS = [
-    "rgba(255,   0,   0, 0.5)",
-    "rgba(  0, 255,   0, 0.5)",
-    "rgba(  0,   0, 255, 0.5)",
-    "rgba(255, 255,   0, 0.5)",
-    "rgba(255,   0, 255, 0.5)",
-    "rgba(  0, 255, 255, 0.5)",
-]
-
 function color_for_group_id(group_id: number, total_groups: number): string
 {
-    // return COLOURS[group_id % COLOURS.length]
-    // get hsl with alpha of 0.5
     return `hsla(${(group_id / total_groups) * 360}, 100%, 50%, 50%)`
 }
 
@@ -434,9 +306,9 @@ function color_for_group_id(group_id: number, total_groups: number): string
 if (typeof document !== "undefined")
 {
     const canvas_el = document.getElementById("canvas") as HTMLCanvasElement
-    get_watershed_from_image(canvas_el, "./input.png", 20, 1)
-    // get_watershed_from_image(canvas_el, "./input2.png", 20, 1)
-    // get_watershed_from_image(canvas_el, "./input3.png", 20, 50)
+    show_watershed_from_image(canvas_el, "./input.png", 20, 1)
+    // show_watershed_from_image(canvas_el, "./input2.png", 20, 1)
+    // show_watershed_from_image(canvas_el, "./input3.png", 20, 50)
 
     const image_data: WatershedData = {
         image_data: new Uint8ClampedArray([
@@ -451,32 +323,5 @@ if (typeof document !== "undefined")
         height: 6
     }
     image_data.image_data.forEach((z, i) => image_data.image_data[i] = z * 100)
-    // get_watershed_from_data(canvas_el, image_data)
+    // show_watershed_from_data(canvas_el, image_data)
 }
-
-
-// export interface VertexOptions
-// {
-//     // This is implementation that does not factor in ground water level or
-//     // ground water flow
-//     w: number // water level
-//     p: number // permeability of ground surface: 0 = impermeable, 1 = fully permeable (i.e. an "infinitely" large hole)
-// }
-
-// export interface Vertex extends VertexOptions
-// {
-//     x: number
-//     y: number
-//     z: number
-// }
-
-// export interface ConnectedVertex extends Vertex
-// {
-//     neighbours: number[]
-// }
-
-// export interface TerrainMesh
-// {
-//     vertices: ConnectedVertex[]
-// }
-

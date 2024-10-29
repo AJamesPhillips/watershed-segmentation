@@ -21,13 +21,6 @@ export interface GroupedVertex
     minima_id?: number
 }
 
-export interface LineArea
-{
-    start: Vertex
-    end: Vertex
-    total_area: number
-}
-
 interface WatershedArea
 {
     // area: number
