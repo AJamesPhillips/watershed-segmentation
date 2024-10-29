@@ -17,8 +17,10 @@ export interface Vertex
 export interface GroupedVertex
 {
     z: number
-    group_ids: number[]
-    minima_id?: number
+    group_ids: Set<number>
+    // Used my vertices which are at a minimum
+    member_indices?: number[]
+    minimum_id?: number
 }
 
 interface WatershedArea
