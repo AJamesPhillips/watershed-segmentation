@@ -66,11 +66,20 @@ if (typeof document !== "undefined")
     }
 
 
-    const canvas_el = document.getElementById("canvas") as HTMLCanvasElement
+    const canvas_el1 = document.getElementById("canvas1") as HTMLCanvasElement
     // Shows demon_screenshot_1.png
     show_watershed_from_image({
-        canvas_el,
+        canvas_el: canvas_el1,
         image_url: "./input_dtm.png",
+        max_z_diff: 2,
+        magnify: Math.pow(2, -2),
+        colour_size: 0.9,
+    })
+
+    const canvas_el2 = document.getElementById("canvas2") as HTMLCanvasElement
+    show_watershed_from_image({
+        canvas_el: canvas_el2,
+        image_url: "./input_dtm2.png",
         max_z_diff: 2,
         magnify: Math.pow(2, -2),
         colour_size: 0.9,
@@ -90,10 +99,10 @@ if (typeof document !== "undefined")
     }
     image_data.image_data.forEach((z, i) => image_data.image_data[i] = z * 100)
     // Shows demo_screenshot_2.png
-    const canvas_el2 = document.getElementById("canvas2") as HTMLCanvasElement
-    show_watershed_from_data(canvas_el2, image_data)
+    const canvas_el3 = document.getElementById("canvas3") as HTMLCanvasElement
+    show_watershed_from_data(canvas_el3, image_data)
 
     // Shows effect of max_z_diff
-    const canvas_el3 = document.getElementById("canvas3") as HTMLCanvasElement
-    show_watershed_from_data(canvas_el3, image_data, 100)
+    const canvas_el4 = document.getElementById("canvas4") as HTMLCanvasElement
+    show_watershed_from_data(canvas_el4, image_data, 100)
 }

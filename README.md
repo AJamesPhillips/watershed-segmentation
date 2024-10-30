@@ -25,4 +25,4 @@ Then navigate to [http://localhost:8000/examples/index.html](http://localhost:80
 
 <img src="./examples/demo_screenshot_1.png" />
 
-Other examples are shown in the examples directory and can be re-generated from the script in src/examples.ts.
+Other examples are shown in the examples directory and can be re-generated from the script in [src/example.ts](./src/example.ts).
