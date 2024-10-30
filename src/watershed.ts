@@ -1,7 +1,8 @@
 import { WatershedData, Watershed, Vertex, GroupedVertex } from "./interfaces"
+import { iterate_2d_data } from "./iterate_2d_data"
 
 
-const DEFAULT_MAX_Z_DIFF = 0
+export const DEFAULT_MAX_Z_DIFF = 0
 
 export async function get_watershed_from_image(canvas_el: HTMLCanvasElement, img_url: string, max_z_diff: number = DEFAULT_MAX_Z_DIFF): Promise<Watershed>
 {
@@ -12,7 +13,7 @@ export async function get_watershed_from_image(canvas_el: HTMLCanvasElement, img
 }
 
 
-async function load_image_and_extract_data(canvas_el: HTMLCanvasElement, img_url: string, magnify=1): Promise<WatershedData>
+export async function load_image_and_extract_data(canvas_el: HTMLCanvasElement, img_url: string, magnify=1): Promise<WatershedData>
 {
     const img = await load_image(img_url)
     return extract_image_data(canvas_el, img, magnify)
@@ -99,26 +100,10 @@ function check_is_int(value: number, message: string)
 
 export function construct_watershed(data: WatershedData, max_z_diff: number = DEFAULT_MAX_Z_DIFF): Watershed
 {
-    console.log("+watershed_segmentation")
     const watershed = watershed_segmentation(data, max_z_diff)
-    console.log("-watershed_segmentation")
     normalise_watershed_group_ids(watershed)
 
     return watershed
-}
-
-
-function iterate_2d_data<U>(data: { image_data: U[], width: number, height: number }, iterator: (x: number, y: number, z: U) => void)
-{
-    const { image_data, width, height } = data
-
-    for (let i = 0; i < image_data.length; ++i)
-    {
-        const x = i % width
-        const y = Math.floor(i / width)
-        const z = image_data[i]
-        iterator(x, y, z)
-    }
 }
 
 
@@ -160,7 +145,7 @@ function watershed_segmentation(data: WatershedData, max_z_diff: number): Waters
     // Then iterate through the vertices from lowest to highest
     sorted_vertices.forEach((vertex, sorted_vertices_index) =>
     {
-        if (sorted_vertices_index % 10000 === 0) console.log(`watershed_segmentation ${sorted_vertices_index}/${sorted_vertices.length}. minimas: ${minima.length}`)
+        // if (sorted_vertices_index % 10000 === 0) console.log(`watershed_segmentation ${sorted_vertices_index}/${sorted_vertices.length}. minimas: ${minima.length}`)
         const { x, y } = vertex
         // Define 8 neighbors
         const neighbours = [
@@ -284,144 +269,4 @@ function normalise_watershed_group_ids(watershed: Watershed)
 
         vertex.group_ids = new Set(mapped_group_ids.sort())
     })
-}
-
-
-function draw_group_colours_onto_canvas(watershed: Watershed, data: WatershedData, context: CanvasRenderingContext2D, magnify: number, colour_size: number = 1)
-{
-    // 1 to 0 where 0 means nothing will be shown, and 1 means
-    // the colour of each pixel will fill the whole pixel.
-    const border = (1 - colour_size) * 0.5
-
-    function fill_group_area()
-    {
-        iterate_2d_data({ image_data: watershed.vertices, width: data.width, height: data.height }, (x, y, element) =>
-        {
-            const { group_ids } = element
-            if (group_ids.size === 1)
-            {
-                context.fillStyle = color_for_group_id(Array.from(group_ids)[0], watershed.area_count)
-                context.fillRect((x + border) * magnify, (y + border) * magnify, (magnify * colour_size), (magnify * colour_size))
-            }
-        })
-    }
-
-
-    function outline_group_area(colour_size: number, offset_x: number)
-    {
-        iterate_2d_data({ image_data: watershed.vertices, width: data.width, height: data.height }, (x, y, element) =>
-        {
-            const { group_ids } = element
-            if (group_ids.size > 1)
-            {
-                const group_count = group_ids.size
-                const group_width = magnify / group_count
-                Array.from(group_ids).forEach((group_id, group_index) => {
-                    context.fillStyle = color_for_group_id(group_id, watershed.area_count)
-                    context.fillRect(offset_x + ((x + border) * magnify) + (group_width * group_index), (y + border) * magnify, group_width, magnify * colour_size)
-                })
-            }
-        })
-    }
-
-    function mark_group_minimum ()
-    {
-        iterate_2d_data({ image_data: watershed.vertices, width: data.width, height: data.height }, (x, y, element) =>
-        {
-            if (element.minimum_id === undefined) return
-
-            context.fillStyle = "rgba(0, 0, 0, 0.5)"
-            const size = 1
-            // context.fillStyle = "rgba(1, 1, 1, 1)"
-            // context.fillRect((x-size)*magnify, (y-size)*magnify, size*2*magnify, size*2*magnify)
-            // set colour of stroke for the rectangle to white
-            context.strokeStyle = "rgba(255, 255, 255, 1)"
-            context.lineWidth = 0.1
-            context.strokeRect(x*magnify, y*magnify, magnify, magnify)
-        })
-    }
-
-    fill_group_area()
-    outline_group_area(1, data.width * magnify)
-    mark_group_minimum()
-}
-
-
-function color_for_group_id(group_id: number, total_groups: number): string
-{
-    return `hsla(${(group_id / total_groups) * 360}, 100%, 50%, 50%)`
-}
-
-
-if (typeof document !== "undefined")
-{
-    interface ShowWatershedFromImageArgs
-    {
-        canvas_el: HTMLCanvasElement
-        image_url: string
-        max_z_diff?: number
-        magnify?: number
-        colour_size?: number
-    }
-    async function show_watershed_from_image(args: ShowWatershedFromImageArgs) //: Promise<Watershed>
-    {
-        const {
-            canvas_el,
-            image_url,
-            max_z_diff = DEFAULT_MAX_Z_DIFF,
-            magnify = 1,
-            colour_size = 0.9,
-        } = args
-
-        const data = await load_image_and_extract_data(canvas_el, image_url, magnify)
-        const watershed = construct_watershed(data, max_z_diff)
-
-        const context = canvas_el.getContext("2d")!
-        draw_group_colours_onto_canvas(watershed, data, context, magnify < 1 ? 1 / magnify : magnify, colour_size)
-    }
-
-
-    async function show_watershed_from_data(canvas_el: HTMLCanvasElement, data: WatershedData, max_z_diff: number = DEFAULT_MAX_Z_DIFF, magnify: number = 50) //: Promise<Watershed>
-    {
-        const context = canvas_el.getContext("2d")!
-
-        iterate_2d_data<number>(data as any, (x, y, z) =>
-        {
-            // draw a pixel at x, y with greyscale intensity of z
-            context.fillStyle = `rgb(${z}, ${z}, ${z})`
-            context.fillRect(x*magnify, y*magnify, magnify, magnify)
-        })
-
-        const watershed = construct_watershed(data, max_z_diff)
-
-        draw_group_colours_onto_canvas(watershed, data, context, magnify)
-    }
-
-
-    const canvas_el = document.getElementById("canvas") as HTMLCanvasElement
-    show_watershed_from_image({
-        canvas_el,
-        image_url: "./input_dtm.png",
-        max_z_diff: 2,
-        magnify: Math.pow(2, -2),
-        colour_size: 0.9,
-    })
-    // show_watershed_from_image(canvas_el, "./input2.png", 20, 1)
-    // show_watershed_from_image(canvas_el, "./input3.png", 20, 50)
-
-    const image_data: WatershedData = {
-        image_data: new Uint8ClampedArray([
-            1, 0, 2, 2, 1,
-            0, 1, 2, 2, 2,
-            1, 2, 2, 0, 2,
-            1, 2, 2, 2, 2,
-            1, 0, 2, 2, 2,
-            1, 0, 2, 2, 1,
-        ]),
-        width: 5,
-        height: 6
-    }
-    image_data.image_data.forEach((z, i) => image_data.image_data[i] = z * 100)
-    // show_watershed_from_data(canvas_el, image_data)
-    // show_watershed_from_data(canvas_el, image_data, 100) // shows effect of max_z_diff
 }

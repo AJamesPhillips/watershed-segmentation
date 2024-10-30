@@ -123,7 +123,6 @@ describe("watershed_segmentation", () =>
             const watershed = construct_watershed(image_data, 1)
             const simplified = simplify_watershed_vertices(watershed.vertices)
             expect(watershed.area_count).toBe(2)
-            console.log(simplified.slice(25))
             expect(simplified).toStrictEqual([
 
                    [0],    [0],    [0],    [0],    [0],
