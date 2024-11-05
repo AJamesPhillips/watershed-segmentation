@@ -1,4 +1,4 @@
-import { WatershedData } from "./interfaces"
+import { WatershedInputData } from "./interfaces"
 import { iterate_2d_data } from "./iterate_2d_data"
 import { draw_group_colours_onto_canvas } from "./plotting"
 import { construct_watershed, DEFAULT_MAX_Z_DIFF, load_image_and_extract_data } from "./watershed"
@@ -38,7 +38,7 @@ if (typeof document !== "undefined")
     }
 
 
-    async function show_watershed_from_data(canvas_el: HTMLCanvasElement, data: WatershedData, max_z_diff: number = DEFAULT_MAX_Z_DIFF, magnify: number = 50) //: Promise<Watershed>
+    async function show_watershed_from_data(canvas_el: HTMLCanvasElement, data: WatershedInputData, max_z_diff: number = DEFAULT_MAX_Z_DIFF, magnify: number = 50) //: Promise<Watershed>
     {
         const context = canvas_el.getContext("2d")!
 
@@ -85,7 +85,7 @@ if (typeof document !== "undefined")
         colour_size: 0.9,
     })
 
-    const image_data: WatershedData = {
+    const image_data: WatershedInputData = {
         image_data: new Uint8ClampedArray([
             1, 0, 2, 2, 1,
             0, 1, 2, 2, 2,

@@ -1,19 +1,28 @@
-import { WatershedData, Watershed, Vertex, GroupedVertex } from "./interfaces"
+import { WatershedInputData, Watershed, Vertex, GroupedVertex } from "./interfaces"
 import { iterate_2d_data } from "./iterate_2d_data"
 
 
 export const DEFAULT_MAX_Z_DIFF = 0
 
-export async function get_watershed_from_image(canvas_el: HTMLCanvasElement, img_url: string, max_z_diff: number = DEFAULT_MAX_Z_DIFF): Promise<Watershed>
+export async function get_watershed_from_image_url(canvas_el: HTMLCanvasElement, img_url: string, max_z_diff: number = DEFAULT_MAX_Z_DIFF, magnify: number = 1): Promise<Watershed>
 {
-    const data = await load_image_and_extract_data(canvas_el, img_url)
+    const data = await load_image_and_extract_data(canvas_el, img_url, magnify)
     const watershed = construct_watershed(data, max_z_diff)
 
     return watershed
 }
 
 
-export async function load_image_and_extract_data(canvas_el: HTMLCanvasElement, img_url: string, magnify=1): Promise<WatershedData>
+export async function get_watershed_from_image_el(canvas_el: HTMLCanvasElement, img_el: HTMLImageElement, max_z_diff: number = DEFAULT_MAX_Z_DIFF, magnify: number = 1): Promise<Watershed>
+{
+    const data = extract_image_data(canvas_el, img_el, magnify)
+    const watershed = construct_watershed(data, max_z_diff)
+
+    return watershed
+}
+
+
+export async function load_image_and_extract_data(canvas_el: HTMLCanvasElement, img_url: string, magnify=1): Promise<WatershedInputData>
 {
     const img = await load_image(img_url)
     return extract_image_data(canvas_el, img, magnify)
@@ -32,7 +41,7 @@ async function load_image(image_url: string): Promise<HTMLImageElement>
 }
 
 
-function extract_image_data(canvas_el: HTMLCanvasElement, image: HTMLImageElement, magnify: number = 1, warn_if_not_grayscale: boolean = true): WatershedData
+function extract_image_data(canvas_el: HTMLCanvasElement, image: HTMLImageElement, magnify: number = 1, warn_if_not_grayscale: boolean = true): WatershedInputData
 {
     const context = canvas_el.getContext("2d")!
 
@@ -98,7 +107,7 @@ function check_is_int(value: number, message: string)
 }
 
 
-export function construct_watershed(data: WatershedData, max_z_diff: number = DEFAULT_MAX_Z_DIFF): Watershed
+export function construct_watershed(data: WatershedInputData, max_z_diff: number = DEFAULT_MAX_Z_DIFF): Watershed
 {
     const watershed = watershed_segmentation(data, max_z_diff)
     normalise_watershed_group_ids(watershed)
@@ -125,7 +134,7 @@ function factory_get_2d_array_value<U>(data: { image_data: U[], width: number, h
 }
 
 
-function watershed_segmentation(data: WatershedData, max_z_diff: number): Watershed
+function watershed_segmentation(data: WatershedInputData, max_z_diff: number): Watershed
 {
     let next_group_id = 0
     const minima: (GroupedVertex & Vertex)[] = []
@@ -245,7 +254,12 @@ function watershed_segmentation(data: WatershedData, max_z_diff: number): Waters
         }
     })
 
-    return { vertices: grouped_vertices, area_count: unique_minima.length }
+    return {
+        width: data.width,
+        height: data.height,
+        vertices: grouped_vertices,
+        area_count: unique_minima.length,
+    }
 }
 
 
@@ -253,11 +267,11 @@ function normalise_watershed_group_ids(watershed: Watershed)
 {
     const group_id_map = new Map<number, number>()
 
-    const minima = watershed.vertices.filter(vertex => vertex.minimum_id !== undefined)
-    minima.sort((a, b) => a.z - b.z)
+    const minima = get_minima_from_vertices(watershed.vertices)
     minima.forEach((minimum, index) =>
     {
         group_id_map.set(minimum.minimum_id!, index)
+        minimum.minimum_id = index
     })
 
     watershed.vertices.forEach(vertex =>
@@ -269,4 +283,12 @@ function normalise_watershed_group_ids(watershed: Watershed)
 
         vertex.group_ids = new Set(mapped_group_ids.sort())
     })
+}
+
+
+export function get_minima_from_vertices(vertices: GroupedVertex[], sorted = true): GroupedVertex[]
+{
+    const minima = vertices.filter(vertex => vertex.minimum_id !== undefined)
+    if (sorted) minima.sort((a, b) => a.z - b.z)
+    return minima
 }

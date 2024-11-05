@@ -1,6 +1,6 @@
 
 
-export interface WatershedData
+export interface WatershedInputData
 {
     image_data: Uint8ClampedArray
     width: number
@@ -33,6 +33,8 @@ interface WatershedArea
 
 export interface Watershed
 {
+    width: number
+    height: number
     vertices: GroupedVertex[]
     area_count: number
 }

@@ -1,11 +1,11 @@
-import { Watershed, WatershedData } from "./interfaces"
+import { Watershed, WatershedInputData } from "./interfaces"
 import { iterate_2d_data } from "./iterate_2d_data"
 
 
 interface DrawGroupColoursOntoCanvasArgs
 {
     watershed: Watershed
-    data: WatershedData
+    data: WatershedInputData
     context: CanvasRenderingContext2D
     magnify: number
     // 1 to 0 where 0 means nothing will be shown, and 1 means
@@ -54,7 +54,7 @@ export function draw_group_colours_onto_canvas(args: DrawGroupColoursOntoCanvasA
 interface FillGroupAreaArgs
 {
     watershed: Watershed
-    data: WatershedData
+    data: WatershedInputData
     context: CanvasRenderingContext2D
     magnify: number
     colour_size: number
@@ -86,7 +86,7 @@ function fill_group_area(args: FillGroupAreaArgs)
 interface OutlineGroupAreaArgs
 {
     watershed: Watershed
-    data: WatershedData
+    data: WatershedInputData
     context: CanvasRenderingContext2D
     magnify: number
     colour_size: number
@@ -123,7 +123,7 @@ function outline_group_area(args: OutlineGroupAreaArgs)
 interface MarkGroupMinimumArgs
 {
     watershed: Watershed
-    data: WatershedData
+    data: WatershedInputData
     context: CanvasRenderingContext2D
     magnify: number
 }
