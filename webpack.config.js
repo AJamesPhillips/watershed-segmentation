@@ -19,4 +19,5 @@ module.exports = {
         path: path.resolve(__dirname, 'dist'), // Output directory
     },
     mode: 'production', // Set the mode to 'production' for minified output
+    devtool: 'source-map', // Generate source maps
 }
