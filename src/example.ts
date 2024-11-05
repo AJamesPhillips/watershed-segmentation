@@ -8,24 +8,37 @@ if (typeof document !== "undefined")
 {
     interface ShowWatershedFromImageArgs
     {
-        canvas_el: HTMLCanvasElement
+        container_el: HTMLDivElement
         image_url: string
         max_z_diff?: number
         magnify?: number
         colour_size?: number
+        width?: number
+        height?: number
     }
     async function show_watershed_from_image(args: ShowWatershedFromImageArgs) //: Promise<Watershed>
     {
         const {
-            canvas_el,
+            container_el,
             image_url,
             max_z_diff = DEFAULT_MAX_Z_DIFF,
             magnify = 1,
             colour_size = 0.9,
+            width = 800,
+            height = 600,
         } = args
+
+        const canvas_el = document.createElement("canvas")
+        canvas_el.width = width
+        canvas_el.height = height
+        container_el.appendChild(canvas_el)
 
         const data = await load_image_and_extract_data(canvas_el, image_url, magnify)
         const watershed = construct_watershed(data, max_z_diff)
+
+        const info_el = document.createElement("div")
+        info_el.textContent = `Area count: ${watershed.area_count}`
+        container_el.appendChild(info_el)
 
         const context = canvas_el.getContext("2d")!
         draw_group_colours_onto_canvas({
@@ -52,6 +65,7 @@ if (typeof document !== "undefined")
         })
 
         const watershed = construct_watershed(data, max_z_diff)
+        watershed.area_count
 
         // draw_group_colours_onto_canvas(watershed, data, context, magnify)
         draw_group_colours_onto_canvas({
@@ -66,21 +80,30 @@ if (typeof document !== "undefined")
     }
 
 
-    const canvas_el1 = document.getElementById("canvas1") as HTMLCanvasElement
+    const container_el1 = document.getElementById("example1") as HTMLDivElement
     // Shows demon_screenshot_1.png
     show_watershed_from_image({
-        canvas_el: canvas_el1,
-        image_url: "./input_dtm.png",
+        container_el: container_el1,
+        image_url: "./input_dtm_v1.png",
         max_z_diff: 2,
         magnify: Math.pow(2, -2),
         colour_size: 0.9,
     })
 
-    const canvas_el2 = document.getElementById("canvas2") as HTMLCanvasElement
+    const container_el2 = document.getElementById("example2") as HTMLDivElement
     show_watershed_from_image({
-        canvas_el: canvas_el2,
-        image_url: "./input_dtm2.png",
+        container_el: container_el2,
+        image_url: "./input_dtm_v2.png",
         max_z_diff: 2,
+        magnify: Math.pow(2, -2),
+        colour_size: 0.9,
+    })
+
+    const container_el2b = document.getElementById("example2b") as HTMLDivElement
+    show_watershed_from_image({
+        container_el: container_el2b,
+        image_url: "./input_dtm_v3.png",
+        max_z_diff: 10,
         magnify: Math.pow(2, -2),
         colour_size: 0.9,
     })
