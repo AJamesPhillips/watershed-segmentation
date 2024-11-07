@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "install_dependencies": "pnpm install --production=false --frozen-lockfile",
     "test": "jest",
     "test:watch": "jest --watch",
     "build:javascript": "tsc",
