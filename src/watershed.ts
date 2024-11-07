@@ -41,7 +41,7 @@ async function load_image(image_url: string): Promise<HTMLImageElement>
 }
 
 
-function extract_image_data(canvas_el: HTMLCanvasElement, image: HTMLImageElement, magnify: number = 1, warn_if_not_grayscale: boolean = true): WatershedInputData
+export function extract_image_data(canvas_el: HTMLCanvasElement, image: HTMLImageElement, magnify: number = 1, warn_if_not_grayscale: boolean = true): WatershedInputData
 {
     const context = canvas_el.getContext("2d")!
 
