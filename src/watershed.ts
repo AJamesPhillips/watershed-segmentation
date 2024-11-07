@@ -13,7 +13,7 @@ export async function get_watershed_from_image_url(canvas_el: HTMLCanvasElement,
 }
 
 
-export async function get_watershed_from_image_el(canvas_el: HTMLCanvasElement, img_el: HTMLImageElement, max_z_diff: number = DEFAULT_MAX_Z_DIFF, magnify: number = 1): Promise<Watershed>
+export function get_watershed_from_image_el(canvas_el: HTMLCanvasElement, img_el: HTMLImageElement, max_z_diff: number = DEFAULT_MAX_Z_DIFF, magnify: number = 1): Watershed
 {
     const data = extract_image_data(canvas_el, img_el, magnify)
     const watershed = construct_watershed(data, max_z_diff)
