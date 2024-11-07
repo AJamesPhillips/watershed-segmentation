@@ -41,7 +41,7 @@ async function load_image(image_url: string): Promise<HTMLImageElement>
 }
 
 
-export function extract_image_data(canvas_el: HTMLCanvasElement, image: HTMLImageElement, magnify: number = 1, warn_if_not_grayscale: boolean = true): WatershedInputData
+export function extract_image_data(canvas_el: HTMLCanvasElement, image: HTMLImageElement, magnify: number = 1, warn_if_not_grayscale: boolean = true, flip_vertically: boolean = false): WatershedInputData
 {
     const context = canvas_el.getContext("2d")!
 
@@ -76,10 +76,11 @@ export function extract_image_data(canvas_el: HTMLCanvasElement, image: HTMLImag
 
     for (var j = 0; j < image_height; ++j)
     {
+        const j2 = flip_vertically ? image_height - j - 1 : j
         for (var i = 0; i < image_width; ++i)
         {
             const index = (4 * i * magnify) + (4 * image_width * j * magnify * magnify)
-            image_data[i + (image_width * j)] = img.data[index]
+            image_data[i + (image_width * j2)] = img.data[index]
             // console.log(i, img.data.length, index, img.data[index])
 
             if (warn_if_not_grayscale && (img.data[index + 1] !== img.data[index] || (img.data[index + 2] !== img.data[index])))
