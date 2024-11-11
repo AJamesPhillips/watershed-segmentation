@@ -1,7 +1,7 @@
 import { WatershedInputData } from "./interfaces"
 import { iterate_2d_data } from "./iterate_2d_data"
 import { draw_watershed_colours_onto_canvas } from "./plotting"
-import { construct_watersheds, DEFAULT_MAX_Z_DIFF, load_image_and_extract_data } from "./watershed"
+import { construct_watersheds, DEFAULT_MAX_Z_DIFF, load_image_and_extract_data } from "./watersheds"
 
 
 if (typeof document !== "undefined")
