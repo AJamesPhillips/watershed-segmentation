@@ -14,15 +14,23 @@ export interface Vertex
     z: number
 }
 
-export interface GroupedVertex
+export interface WatershedMinimum
+{
+    member_indices: number[]
+    minimum_id: number
+}
+
+
+export function is_watershed_minimum<U extends Partial<WatershedMinimum>, T extends U & WatershedMinimum>(obj: U): obj is T
+{
+    return obj.minimum_id !== undefined
+}
+
+export interface GroupedVertex extends Partial<WatershedMinimum>
 {
     z: number
     // The ids of the watershed minimum/minima this vertex belongs to
     group_ids: Set<number>
-
-    // Used my vertices which are at a minimum
-    member_indices?: number[]
-    minimum_id?: number
 }
 
 interface WatershedArea

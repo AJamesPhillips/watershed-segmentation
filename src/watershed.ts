@@ -1,4 +1,4 @@
-import { WatershedInputData, Watershed, Vertex, GroupedVertex } from "./interfaces"
+import { WatershedInputData, Watershed, Vertex, GroupedVertex, WatershedMinimum, is_watershed_minimum } from "./interfaces"
 import { iterate_2d_data } from "./iterate_2d_data"
 
 
@@ -289,9 +289,19 @@ function normalise_watershed_group_ids(watershed: Watershed)
 }
 
 
-export function get_minima_from_vertices(vertices: GroupedVertex[], sorted = true): GroupedVertex[]
+export function get_minima_from_vertices(vertices: GroupedVertex[], sorted = true): (GroupedVertex & WatershedMinimum)[]
 {
-    const minima = vertices.filter(vertex => vertex.minimum_id !== undefined)
+    const minima = vertices.filter(is_watershed_minimum)
     if (sorted) minima.sort((a, b) => a.z - b.z)
     return minima
+}
+
+
+export function factory_get_minimum_by_id_from_vertices(vertices: GroupedVertex[]): (minimum_id: number) => (GroupedVertex & WatershedMinimum) | undefined
+{
+    const minima = get_minima_from_vertices(vertices)
+    const map_minima_id_to_minima: {[id: number]: (GroupedVertex & WatershedMinimum)} = {}
+    minima.forEach(m => map_minima_id_to_minima[m.minimum_id] = m)
+
+    return (minimum_id: number) => map_minima_id_to_minima[minimum_id]
 }

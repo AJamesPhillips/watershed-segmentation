@@ -7,7 +7,30 @@ import {
 } from "./test_fixtures"
 import {
     construct_watershed,
+    factory_get_minimum_by_id_from_vertices,
 }  from "./watershed"
+
+
+describe("watershed functions", () =>
+{
+    const image_data = fixture_input_data_1()
+    const watershed = construct_watershed(image_data)
+
+    test("construct_watershed", () =>
+    {
+        expect(watershed.width).toBe(3)
+        expect(watershed.height).toBe(3)
+        expect(watershed.vertices.length).toBe(9)
+        expect(watershed.area_count).toBe(2)
+    })
+
+    test("factory_get_minimum_by_id_from_vertices", () =>
+    {
+        const get_minimum_by_id = factory_get_minimum_by_id_from_vertices(watershed.vertices)
+        expect(get_minimum_by_id(0)).toBe(watershed.vertices[0])
+        expect(get_minimum_by_id(1)).toBe(watershed.vertices[8])
+    })
+})
 
 
 describe("watershed_segmentation", () =>
