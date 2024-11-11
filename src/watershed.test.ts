@@ -2,6 +2,7 @@
 import { GroupedVertex, Watershed } from "./interfaces"
 import {
     fixture_input_data_1,
+    fixture_input_data_1b,
     fixture_input_data_2,
     fixture_input_data_3,
 } from "./test_fixtures"
@@ -98,6 +99,19 @@ describe("watershed_segmentation", () =>
             "*0  | 0  | 0  ",
             " 0  | 0 1| 0 1",
             " 0  | 0 1|  *1",
+        ])
+    })
+
+    test("test fixture 1b", () =>
+    {
+        const image_data = fixture_input_data_1b()
+        const watershed = construct_watershed(image_data)
+        expect(watershed.area_count).toBe(2)
+        const simplified = simplify_watershed_vertices(watershed)
+        expect(simplified).toStrictEqual([
+            " 0  | 0  | 0 1|   1",
+            " 0  |*0  | 0 1|  *1",
+            " 0  | 0  | 0 1|   1",
         ])
     })
 

@@ -17,6 +17,23 @@ export function fixture_input_data_1 (): WatershedInputData
 }
 
 
+export function fixture_input_data_1b (): WatershedInputData
+{
+    const image_data: WatershedInputData = {
+        image_data: new Uint8ClampedArray([
+            // Depression in middle with valley to one edge
+            1, 1, 1, 1,
+            1, 0, 1, 0,
+            1, 1, 1, 1,
+        ]),
+        width: 4,
+        height: 3
+    }
+
+    return image_data
+}
+
+
 export function fixture_input_data_2 (): WatershedInputData
 {
     const image_data: WatershedInputData = {
