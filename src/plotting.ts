@@ -2,7 +2,7 @@ import { Watersheds, WatershedInputData } from "./interfaces"
 import { iterate_2d_data } from "./iterate_2d_data"
 
 
-interface DrawGroupColoursOntoCanvasArgs
+interface DrawWatershedColoursOntoCanvasArgs
 {
     watershed: Watersheds
     data: WatershedInputData
@@ -13,9 +13,9 @@ interface DrawGroupColoursOntoCanvasArgs
     colour_size?: number
     colour_size_boundary?: number
 
-    x_offset_group_outlines?: number
+    x_offset_watershed_outlines?: number
 }
-export function draw_group_colours_onto_canvas(args: DrawGroupColoursOntoCanvasArgs)
+export function draw_watershed_colours_onto_canvas(args: DrawWatershedColoursOntoCanvasArgs)
 {
     const {
         watershed,
@@ -25,24 +25,24 @@ export function draw_group_colours_onto_canvas(args: DrawGroupColoursOntoCanvasA
         colour_size = 1,
         colour_size_boundary = 1,
     } = args
-    let x_offset_group_outlines = args.x_offset_group_outlines ?? (data.width * magnify)
+    let x_offset_watershed_outlines = args.x_offset_watershed_outlines ?? (data.width * magnify)
 
-    fill_group_area({
+    fill_watershed_area({
         watershed,
         data,
         context,
         magnify,
         colour_size,
     })
-    outline_group_area({
+    outline_watershed_area({
         watershed,
         data,
         context,
         magnify,
         colour_size: colour_size_boundary,
-        offset_x: x_offset_group_outlines,
+        offset_x: x_offset_watershed_outlines,
     })
-    mark_group_minimum({
+    mark_watershed_minimum({
         watershed,
         data,
         context,
@@ -51,7 +51,7 @@ export function draw_group_colours_onto_canvas(args: DrawGroupColoursOntoCanvasA
 }
 
 
-interface FillGroupAreaArgs
+interface FillWatershedAreaArgs
 {
     watershed: Watersheds
     data: WatershedInputData
@@ -59,7 +59,7 @@ interface FillGroupAreaArgs
     magnify: number
     colour_size: number
 }
-function fill_group_area(args: FillGroupAreaArgs)
+function fill_watershed_area(args: FillWatershedAreaArgs)
 {
     const {
         watershed,
@@ -76,14 +76,14 @@ function fill_group_area(args: FillGroupAreaArgs)
         const { watershed_ids } = element
         if (watershed_ids.size === 1)
         {
-            context.fillStyle = color_for_group_id(Array.from(watershed_ids)[0], watershed.watershed_count)
+            context.fillStyle = color_for_watershed_id(Array.from(watershed_ids)[0], watershed.watershed_count)
             context.fillRect((x + border) * magnify, (y + border) * magnify, (magnify * colour_size), (magnify * colour_size))
         }
     })
 }
 
 
-interface OutlineGroupAreaArgs
+interface OutlineWatershedAreaArgs
 {
     watershed: Watersheds
     data: WatershedInputData
@@ -92,7 +92,7 @@ interface OutlineGroupAreaArgs
     colour_size: number
     offset_x: number
 }
-function outline_group_area(args: OutlineGroupAreaArgs)
+function outline_watershed_area(args: OutlineWatershedAreaArgs)
 {
     const {
         watershed,
@@ -111,8 +111,8 @@ function outline_group_area(args: OutlineGroupAreaArgs)
         {
             const group_count = watershed_ids.size
             const group_width = (magnify / group_count) * colour_size
-            Array.from(watershed_ids).forEach((group_id, group_index) => {
-                context.fillStyle = color_for_group_id(group_id, watershed.watershed_count)
+            Array.from(watershed_ids).forEach((watershed_id, group_index) => {
+                context.fillStyle = color_for_watershed_id(watershed_id, watershed.watershed_count)
                 context.fillRect(offset_x + ((x + border) * magnify) + (group_width * group_index), (y + border) * magnify, group_width, magnify * colour_size)
             })
         }
@@ -120,14 +120,14 @@ function outline_group_area(args: OutlineGroupAreaArgs)
 }
 
 
-interface MarkGroupMinimumArgs
+interface MarkWatershedMinimumArgs
 {
     watershed: Watersheds
     data: WatershedInputData
     context: CanvasRenderingContext2D
     magnify: number
 }
-function mark_group_minimum (args: MarkGroupMinimumArgs)
+function mark_watershed_minimum (args: MarkWatershedMinimumArgs)
 {
     const { watershed, data, context, magnify } = args
 
@@ -147,7 +147,7 @@ function mark_group_minimum (args: MarkGroupMinimumArgs)
 }
 
 
-function color_for_group_id(group_id: number, total_groups: number): string
+function color_for_watershed_id(watershed_id: number, total_watersheds: number): string
 {
-    return `hsla(${(group_id / total_groups) * 360}, 100%, 50%, 50%)`
+    return `hsla(${(watershed_id / total_watersheds) * 360}, 100%, 50%, 50%)`
 }

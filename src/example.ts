@@ -1,7 +1,7 @@
 import { WatershedInputData } from "./interfaces"
 import { iterate_2d_data } from "./iterate_2d_data"
-import { draw_group_colours_onto_canvas } from "./plotting"
-import { construct_watershed, DEFAULT_MAX_Z_DIFF, load_image_and_extract_data } from "./watershed"
+import { draw_watershed_colours_onto_canvas } from "./plotting"
+import { construct_watersheds, DEFAULT_MAX_Z_DIFF, load_image_and_extract_data } from "./watershed"
 
 
 if (typeof document !== "undefined")
@@ -34,14 +34,14 @@ if (typeof document !== "undefined")
         container_el.appendChild(canvas_el)
 
         const data = await load_image_and_extract_data(canvas_el, image_url, magnify)
-        const watershed = construct_watershed(data, max_z_diff)
+        const watershed = construct_watersheds(data, max_z_diff)
 
         const info_el = document.createElement("div")
         info_el.textContent = `Area count: ${watershed.watershed_count}`
         container_el.appendChild(info_el)
 
         const context = canvas_el.getContext("2d")!
-        draw_group_colours_onto_canvas({
+        draw_watershed_colours_onto_canvas({
             watershed,
             data,
             context,
@@ -64,18 +64,18 @@ if (typeof document !== "undefined")
             context.fillRect((x + data.width)*magnify, y*magnify, magnify, magnify)
         })
 
-        const watershed = construct_watershed(data, max_z_diff)
+        const watershed = construct_watersheds(data, max_z_diff)
         watershed.watershed_count
 
-        // draw_group_colours_onto_canvas(watershed, data, context, magnify)
-        draw_group_colours_onto_canvas({
+        // draw_watershed_colours_onto_canvas(watershed, data, context, magnify)
+        draw_watershed_colours_onto_canvas({
             watershed,
             data,
             context,
             magnify, // not sure if we need this: `magnify < 1 ? 1 / magnify : magnify,`
             colour_size: 1,
             colour_size_boundary: 0.5,
-            x_offset_group_outlines: 0,
+            x_offset_watershed_outlines: 0,
         })
     }
 
