@@ -1,136 +1,106 @@
 
-import { WatershedInputData } from "./interfaces"
+import { GroupedVertex, Watershed } from "./interfaces"
+import {
+    fixture_input_data_1,
+    fixture_input_data_2,
+    fixture_input_data_3,
+} from "./test_fixtures"
 import {
     construct_watershed,
 }  from "./watershed"
 
 
-
-function fixture_image_1 (): WatershedInputData
-{
-    const image_data: WatershedInputData = {
-        image_data: new Uint8ClampedArray([
-            0, 0, 0,
-            0, 1, 1,
-            0, 1, 0,
-        ]),
-        width: 3,
-        height: 3
-    }
-
-    return image_data
-}
-
-
-function fixture_image_2 (): WatershedInputData
-{
-    const image_data: WatershedInputData = {
-        image_data: new Uint8ClampedArray([
-            1, 0, 0, 0, 0,
-            0, 0, 2, 2, 2,
-            1, 0, 2, 1, 2,
-            1, 0, 2, 2, 2,
-            1, 0, 1, 0, 0,
-            1, 0, 0, 0, 0,
-        ]),
-        width: 5,
-        height: 6
-    }
-
-    return image_data
-}
-
-
-function fixture_image_3 (): WatershedInputData
-{
-    const image_data: WatershedInputData = {
-        image_data: new Uint8ClampedArray([
-            1, 0, 2, 2, 1,
-            0, 1, 2, 2, 2,
-            1, 2, 2, 1, 2,
-            1, 2, 2, 2, 2,
-            1, 0, 2, 2, 2,
-            1, 0, 2, 2, 1,
-        ]),
-        width: 5,
-        height: 6
-    }
-
-    return image_data
-}
-
-
 describe("watershed_segmentation", () =>
 {
-    function simplify_watershed_vertices (vertices: { z: number, group_ids: Set<number> }[]): number[][]
+    function simplify_watershed_vertices (watershed: Watershed): string[]
     {
-        return vertices.map(vertex =>
+        const return_rows: string[] = []
+        let current_row: string[] = []
+
+        function to_row_string (vertex: GroupedVertex): string
         {
-            return Array.from(vertex.group_ids)
+            let row_string = ""
+            for (let i = 0; i < watershed.area_count; i++)
+            {
+                const is_minima = vertex.minimum_id !== undefined ? "*" : " "
+                row_string += vertex.group_ids.has(i) ? `${is_minima}${i}` : "  "
+            }
+            return row_string
+        }
+
+        watershed.vertices.map((vertex, i) =>
+        {
+            current_row.push(to_row_string(vertex))
+            if (i % watershed.width === watershed.width - 1)
+            {
+                return_rows.push(current_row.join("|"))
+                current_row = []
+            }
         })
+
+        return return_rows
     }
+
 
     test("test fixture 1", () =>
     {
-        const image_data = fixture_image_1()
+        const image_data = fixture_input_data_1()
         const watershed = construct_watershed(image_data)
-        const simplified = simplify_watershed_vertices(watershed.vertices)
         expect(watershed.area_count).toBe(2)
+        const simplified = simplify_watershed_vertices(watershed)
         expect(simplified).toStrictEqual([
-            [0],    [0],    [0],
-            [0], [0, 1], [0, 1],
-            [0], [0, 1],    [1],
+            "*0  | 0  | 0  ",
+            " 0  | 0 1| 0 1",
+            " 0  | 0 1|  *1",
         ])
     })
 
     test("test fixture 2", () =>
     {
-        const image_data = fixture_image_2()
+        const image_data = fixture_input_data_2()
         const watershed = construct_watershed(image_data)
-        const simplified = simplify_watershed_vertices(watershed.vertices)
         expect(watershed.area_count).toBe(2)
+        const simplified = simplify_watershed_vertices(watershed)
         expect(simplified).toStrictEqual([
-            [0],    [0],    [0],    [0],    [0],
-            [0],    [0], [0, 1], [0, 1], [0, 1],
-            [0],    [0], [0, 1],    [1],    [1],
-            [0],    [0], [0, 1], [0, 1], [0, 1],
-            [0],    [0],    [0],    [0],    [0],
-            [0],    [0],    [0],    [0],    [0],
+            " 0  |*0  | 0  | 0  | 0  ",
+            " 0  | 0  | 0 1| 0 1| 0 1",
+            " 0  | 0  | 0 1|  *1|   1",
+            " 0  | 0  | 0 1| 0 1| 0 1",
+            " 0  | 0  | 0  | 0  | 0  ",
+            " 0  | 0  | 0  | 0  | 0  ",
         ])
     })
 
     test("test fixture 3", () =>
     {
-        const image_data = fixture_image_3()
+        const image_data = fixture_input_data_3()
         const watershed = construct_watershed(image_data)
-        const simplified = simplify_watershed_vertices(watershed.vertices)
         expect(watershed.area_count).toBe(5)
+        const simplified = simplify_watershed_vertices(watershed)
         expect(simplified).toStrictEqual([
-
-               [0],    [0],       [0],    [0, 2],       [2],
-               [0],    [0],    [0, 3], [0, 2, 3],    [2, 3],
-               [0],    [0],    [0, 3],       [3],       [3],
-            [0, 1], [0, 1], [0, 1, 3],       [3],       [3],
-               [1],    [1],    [1, 3],    [3, 4],    [3, 4],
-               [1],    [1],       [1],    [1, 4],       [4],
+            " 0        |*0        | 0        | 0   2    |    *2    ",
+            " 0        | 0        | 0     3  | 0   2 3  |     2 3  ",
+            " 0        | 0        | 0     3  |      *3  |       3  ",
+            " 0 1      | 0 1      | 0 1   3  |       3  |       3  ",
+            "   1      |  *1      |   1   3  |       3 4|       3 4",
+            "   1      |   1      |   1      |   1     4|        *4",
         ])
     })
 
     test("test max_z_diff of 1", () =>
-        {
-            const image_data = fixture_image_3()
-            image_data.image_data[3 + (2 * 5)] = 0 // set pixel at x 3, y 2, to 0
-            const watershed = construct_watershed(image_data, 1)
-            const simplified = simplify_watershed_vertices(watershed.vertices)
-            expect(watershed.area_count).toBe(2)
-            expect(simplified).toStrictEqual([
-
-                   [0],    [0],    [0],    [0],    [0],
-                   [0],    [0], [0, 1], [0, 1], [0, 1],
-                   [0],    [0], [0, 1],    [1],    [1],
-                   [0],    [0], [0, 1],    [1],    [1],
-                   [0],    [0], [0, 1],    [1],    [1],
-                   [0],    [0], [0, 1],    [1],    [1],
-            ])
-        })
+    {
+        const image_data = fixture_input_data_3()
+        image_data.image_data[3 + (2 * 5)] = 0 // set pixel at x 3, y 2, to 0
+        const watershed = construct_watershed(image_data, 1)
+        expect(watershed.area_count).toBe(2)
+        const simplified = simplify_watershed_vertices(watershed)
+        expect(simplified).toStrictEqual([
+            " 0  |*0  | 0  | 0  | 0  ",
+            " 0  | 0  | 0 1| 0 1| 0 1",
+            " 0  | 0  | 0 1|  *1|   1",
+            " 0  | 0  | 0 1|   1|   1",
+            " 0  | 0  | 0 1|   1|   1",
+            " 0  | 0  | 0 1|   1|   1",
+        ])
+    })
 })
