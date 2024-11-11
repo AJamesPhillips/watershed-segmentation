@@ -3,7 +3,7 @@
         "target": "es6", // Specify ECMAScript target version
         "lib": ["es2016", "dom"],
         "module": "ES6", // Specify module code generation
-        "outDir": "./src", // Redirect output structure to the directory
+        "outDir": "./dist", // Redirect output structure to the directory
         "rootDir": "./src", // Specify the root directory of input files
         "strict": true, // Enable all strict type-checking options
         "esModuleInterop": true, // Enables emit interoperability between CommonJS and ES Modules

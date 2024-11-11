@@ -8,6 +8,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "build:javascript": "tsc",
+    "build:javascript:watch": "tsc --watch",
     "build": "webpack",
     "build:watch": "webpack --watch"
   },

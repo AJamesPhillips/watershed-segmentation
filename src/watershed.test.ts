@@ -1,14 +1,14 @@
 
-import { WatershedData } from "./interfaces"
+import { WatershedInputData } from "./interfaces"
 import {
     construct_watershed,
 }  from "./watershed"
 
 
 
-function fixture_image_1 (): WatershedData
+function fixture_image_1 (): WatershedInputData
 {
-    const image_data: WatershedData = {
+    const image_data: WatershedInputData = {
         image_data: new Uint8ClampedArray([
             0, 0, 0,
             0, 1, 1,
@@ -22,9 +22,9 @@ function fixture_image_1 (): WatershedData
 }
 
 
-function fixture_image_2 (): WatershedData
+function fixture_image_2 (): WatershedInputData
 {
-    const image_data: WatershedData = {
+    const image_data: WatershedInputData = {
         image_data: new Uint8ClampedArray([
             1, 0, 0, 0, 0,
             0, 0, 2, 2, 2,
@@ -41,9 +41,9 @@ function fixture_image_2 (): WatershedData
 }
 
 
-function fixture_image_3 (): WatershedData
+function fixture_image_3 (): WatershedInputData
 {
-    const image_data: WatershedData = {
+    const image_data: WatershedInputData = {
         image_data: new Uint8ClampedArray([
             1, 0, 2, 2, 1,
             0, 1, 2, 2, 2,

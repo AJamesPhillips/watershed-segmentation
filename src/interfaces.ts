@@ -17,7 +17,9 @@ export interface Vertex
 export interface GroupedVertex
 {
     z: number
+    // The ids of the watershed minimum/minima this vertex belongs to
     group_ids: Set<number>
+
     // Used my vertices which are at a minimum
     member_indices?: number[]
     minimum_id?: number

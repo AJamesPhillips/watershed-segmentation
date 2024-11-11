@@ -193,10 +193,10 @@ function watershed_segmentation(data: WatershedInputData, max_z_diff: number): W
                 minimum.member_indices!.push(sorted_vertices_index)
             })
 
+            // If the vertex is connected to more than one local minimum then
+            // check if we can merge these groups/watersheds
             if (single_group_ids.size > 1)
             {
-                // Check if we can merge these groups.
-
                 // If there's only one minimum connected to this vertex then we
                 // return early as we can't merge anything.
                 if (minima_this_vertex_is_connected_to.length <= 1) return
@@ -236,6 +236,8 @@ function watershed_segmentation(data: WatershedInputData, max_z_diff: number): W
         }
         else
         {
+            // If the vertex is not connected to any local minimum then create a
+            // new minimum from it.
             vertex.minimum_id = next_group_id++
             vertex.group_ids = new Set([vertex.minimum_id])
             vertex.member_indices = [sorted_vertices_index]
