@@ -8,6 +8,7 @@ import {
 import {
     construct_watershed,
     factory_get_minimum_by_id_from_vertices,
+    factory_get_minimum_for_vertex,
 }  from "./watershed"
 
 
@@ -29,6 +30,28 @@ describe("watershed functions", () =>
         const get_minimum_by_id = factory_get_minimum_by_id_from_vertices(watershed.vertices)
         expect(get_minimum_by_id(0)).toBe(watershed.vertices[0])
         expect(get_minimum_by_id(1)).toBe(watershed.vertices[8])
+    })
+
+    test("factory_get_minimum_for_vertex", () =>
+    {
+        const get_minimum_for_vertex = factory_get_minimum_for_vertex(watershed.vertices)
+        const vertex = watershed.vertices[4]
+        // This test is here as a reminder that this vertex should belong to
+        // both watershed areas / minimums
+        expect(vertex.group_ids).toStrictEqual(new Set([0, 1]))
+        // Should be the lowest minimum
+        expect(get_minimum_for_vertex(vertex)).toBe(watershed.vertices[0])
+    })
+
+    test("factory_get_minimum_for_vertex highest minimum", () =>
+    {
+        const get_minimum_for_vertex = factory_get_minimum_for_vertex(watershed.vertices, false)
+        const vertex = watershed.vertices[4]
+        // This test is here as a reminder that this vertex should belong to
+        // both watershed areas / minimums
+        expect(vertex.group_ids).toStrictEqual(new Set([0, 1]))
+        // Should be the highest minimum
+        expect(get_minimum_for_vertex(vertex)).toBe(watershed.vertices[8])
     })
 })
 

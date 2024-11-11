@@ -297,11 +297,25 @@ export function get_minima_from_vertices(vertices: GroupedVertex[], sorted = tru
 }
 
 
-export function factory_get_minimum_by_id_from_vertices(vertices: GroupedVertex[]): (minimum_id: number) => (GroupedVertex & WatershedMinimum) | undefined
+export function factory_get_minimum_by_id_from_vertices(vertices: GroupedVertex[]): (minimum_id: number) => (GroupedVertex & WatershedMinimum)
 {
     const minima = get_minima_from_vertices(vertices)
     const map_minima_id_to_minima: {[id: number]: (GroupedVertex & WatershedMinimum)} = {}
     minima.forEach(m => map_minima_id_to_minima[m.minimum_id] = m)
 
     return (minimum_id: number) => map_minima_id_to_minima[minimum_id]
+}
+
+
+export function factory_get_minimum_for_vertex(vertices: GroupedVertex[], lowest_minimum: boolean = true): (vertex: GroupedVertex) => (GroupedVertex & WatershedMinimum)
+{
+    const get_minimum_by_id = factory_get_minimum_by_id_from_vertices(vertices)
+
+    return (vertex: GroupedVertex) =>
+    {
+        const minimum_id = lowest_minimum ? Math.min(...vertex.group_ids) : Math.max(...vertex.group_ids)
+        const minimum = get_minimum_by_id(minimum_id)
+
+        return minimum
+    }
 }
