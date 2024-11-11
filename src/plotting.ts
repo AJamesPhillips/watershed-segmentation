@@ -1,10 +1,10 @@
-import { Watershed, WatershedInputData } from "./interfaces"
+import { Watersheds, WatershedInputData } from "./interfaces"
 import { iterate_2d_data } from "./iterate_2d_data"
 
 
 interface DrawGroupColoursOntoCanvasArgs
 {
-    watershed: Watershed
+    watershed: Watersheds
     data: WatershedInputData
     context: CanvasRenderingContext2D
     magnify: number
@@ -53,7 +53,7 @@ export function draw_group_colours_onto_canvas(args: DrawGroupColoursOntoCanvasA
 
 interface FillGroupAreaArgs
 {
-    watershed: Watershed
+    watershed: Watersheds
     data: WatershedInputData
     context: CanvasRenderingContext2D
     magnify: number
@@ -73,10 +73,10 @@ function fill_group_area(args: FillGroupAreaArgs)
 
     iterate_2d_data({ image_data: watershed.vertices, width: data.width, height: data.height }, (x, y, element) =>
     {
-        const { group_ids } = element
-        if (group_ids.size === 1)
+        const { watershed_ids } = element
+        if (watershed_ids.size === 1)
         {
-            context.fillStyle = color_for_group_id(Array.from(group_ids)[0], watershed.area_count)
+            context.fillStyle = color_for_group_id(Array.from(watershed_ids)[0], watershed.watershed_count)
             context.fillRect((x + border) * magnify, (y + border) * magnify, (magnify * colour_size), (magnify * colour_size))
         }
     })
@@ -85,7 +85,7 @@ function fill_group_area(args: FillGroupAreaArgs)
 
 interface OutlineGroupAreaArgs
 {
-    watershed: Watershed
+    watershed: Watersheds
     data: WatershedInputData
     context: CanvasRenderingContext2D
     magnify: number
@@ -106,13 +106,13 @@ function outline_group_area(args: OutlineGroupAreaArgs)
 
     iterate_2d_data({ image_data: watershed.vertices, width: data.width, height: data.height }, (x, y, element) =>
     {
-        const { group_ids } = element
-        if (group_ids.size > 1)
+        const { watershed_ids } = element
+        if (watershed_ids.size > 1)
         {
-            const group_count = group_ids.size
+            const group_count = watershed_ids.size
             const group_width = (magnify / group_count) * colour_size
-            Array.from(group_ids).forEach((group_id, group_index) => {
-                context.fillStyle = color_for_group_id(group_id, watershed.area_count)
+            Array.from(watershed_ids).forEach((group_id, group_index) => {
+                context.fillStyle = color_for_group_id(group_id, watershed.watershed_count)
                 context.fillRect(offset_x + ((x + border) * magnify) + (group_width * group_index), (y + border) * magnify, group_width, magnify * colour_size)
             })
         }
@@ -122,7 +122,7 @@ function outline_group_area(args: OutlineGroupAreaArgs)
 
 interface MarkGroupMinimumArgs
 {
-    watershed: Watershed
+    watershed: Watersheds
     data: WatershedInputData
     context: CanvasRenderingContext2D
     magnify: number

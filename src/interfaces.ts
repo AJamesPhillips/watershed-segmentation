@@ -29,8 +29,8 @@ export function is_watershed_minimum<U extends Partial<WatershedMinimum>, T exte
 export interface GroupedVertex extends Partial<WatershedMinimum>
 {
     z: number
-    // The ids of the watershed minimum/minima this vertex belongs to
-    group_ids: Set<number>
+    // The ids of the watershed this vertex belongs to
+    watershed_ids: Set<number>
 }
 
 interface WatershedArea
@@ -41,10 +41,10 @@ interface WatershedArea
     vertices: Vertex[]
 }
 
-export interface Watershed
+export interface Watersheds
 {
-    width: number
-    height: number
+    input_width: number
+    input_height: number
     vertices: GroupedVertex[]
-    area_count: number
+    watershed_count: number
 }

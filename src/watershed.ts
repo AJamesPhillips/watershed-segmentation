@@ -1,10 +1,10 @@
-import { WatershedInputData, Watershed, Vertex, GroupedVertex, WatershedMinimum, is_watershed_minimum } from "./interfaces"
+import { WatershedInputData, Watersheds, Vertex, GroupedVertex, WatershedMinimum, is_watershed_minimum } from "./interfaces"
 import { iterate_2d_data } from "./iterate_2d_data"
 
 
 export const DEFAULT_MAX_Z_DIFF = 0
 
-export async function get_watershed_from_image_url(canvas_el: HTMLCanvasElement, img_url: string, max_z_diff: number = DEFAULT_MAX_Z_DIFF, magnify: number = 1): Promise<Watershed>
+export async function get_watershed_from_image_url(canvas_el: HTMLCanvasElement, img_url: string, max_z_diff: number = DEFAULT_MAX_Z_DIFF, magnify: number = 1): Promise<Watersheds>
 {
     const data = await load_image_and_extract_data(canvas_el, img_url, magnify)
     const watershed = construct_watershed(data, max_z_diff)
@@ -13,7 +13,7 @@ export async function get_watershed_from_image_url(canvas_el: HTMLCanvasElement,
 }
 
 
-export function get_watershed_from_image_el(canvas_el: HTMLCanvasElement, img_el: HTMLImageElement, max_z_diff: number = DEFAULT_MAX_Z_DIFF, magnify: number = 1): Watershed
+export function get_watershed_from_image_el(canvas_el: HTMLCanvasElement, img_el: HTMLImageElement, max_z_diff: number = DEFAULT_MAX_Z_DIFF, magnify: number = 1): Watersheds
 {
     const data = extract_image_data(canvas_el, img_el, magnify)
     const watershed = construct_watershed(data, max_z_diff)
@@ -108,10 +108,10 @@ function check_is_int(value: number, message: string)
 }
 
 
-export function construct_watershed(data: WatershedInputData, max_z_diff: number = DEFAULT_MAX_Z_DIFF): Watershed
+export function construct_watershed(data: WatershedInputData, max_z_diff: number = DEFAULT_MAX_Z_DIFF): Watersheds
 {
     const watershed = watershed_segmentation(data, max_z_diff)
-    normalise_watershed_group_ids(watershed)
+    normalise_watershed_watershed_ids(watershed)
 
     return watershed
 }
@@ -135,7 +135,7 @@ function factory_get_2d_array_value<U>(data: { image_data: U[], width: number, h
 }
 
 
-function watershed_segmentation(data: WatershedInputData, max_z_diff: number): Watershed
+function watershed_segmentation(data: WatershedInputData, max_z_diff: number): Watersheds
 {
     let next_group_id = 0
     const minima: (GroupedVertex & Vertex)[] = []
@@ -144,7 +144,7 @@ function watershed_segmentation(data: WatershedInputData, max_z_diff: number): W
     const vertices: (GroupedVertex & Vertex)[] = []
     iterate_2d_data<number>(data as any, (x, y, z) =>
     {
-        vertices.push({ x, y, z, group_ids: new Set() })
+        vertices.push({ x, y, z, watershed_ids: new Set() })
     })
     const get_2d_array_value = factory_get_2d_array_value({ image_data: vertices, width: data.width, height: data.height })
 
@@ -169,21 +169,21 @@ function watershed_segmentation(data: WatershedInputData, max_z_diff: number): W
             get_2d_array_value(x + 1, y + 1)  // bottom-right
         ]
         // Check how many of the neighbors are connected to a local minimum
-        const single_group_ids = new Set<number>()
-        // const multi_group_ids = new Set<number>()
+        const single_watershed_ids = new Set<number>()
+        // const multi_watershed_ids = new Set<number>()
         neighbours.forEach(neighbor =>
         {
             if (!neighbor) return  // Skip if neighbor is null
-            if (neighbor.group_ids.size === 1) neighbor.group_ids.forEach(v => single_group_ids.add(v))
-            // else neighbor.group_ids.forEach(group_id => multi_group_ids.add(group_id))
+            if (neighbor.watershed_ids.size === 1) neighbor.watershed_ids.forEach(v => single_watershed_ids.add(v))
+            // else neighbor.watershed_ids.forEach(group_id => multi_watershed_ids.add(group_id))
         })
 
         // If the vertex is connected to one or more local minimum then assign
         // it to those groups
-        if (single_group_ids.size)
+        if (single_watershed_ids.size)
         {
-            vertex.group_ids = single_group_ids
-            const minima_this_vertex_is_connected_to = Array.from(vertex.group_ids).map(group_id =>
+            vertex.watershed_ids = single_watershed_ids
+            const minima_this_vertex_is_connected_to = Array.from(vertex.watershed_ids).map(group_id =>
             {
                 return minima[group_id]
             })
@@ -195,7 +195,7 @@ function watershed_segmentation(data: WatershedInputData, max_z_diff: number): W
 
             // If the vertex is connected to more than one local minimum then
             // check if we can merge these groups/watersheds
-            if (single_group_ids.size > 1)
+            if (single_watershed_ids.size > 1)
             {
                 // If there's only one minimum connected to this vertex then we
                 // return early as we can't merge anything.
@@ -224,8 +224,8 @@ function watershed_segmentation(data: WatershedInputData, max_z_diff: number): W
                     minimum.member_indices!.forEach(index =>
                     {
                         const member_vertex = sorted_vertices[index]
-                        member_vertex.group_ids.delete(minimum.minimum_id!)
-                        member_vertex.group_ids.add(minimum_to_keep.minimum_id!)
+                        member_vertex.watershed_ids.delete(minimum.minimum_id!)
+                        member_vertex.watershed_ids.add(minimum_to_keep.minimum_id!)
                     })
 
                     minimum_to_keep.member_indices = minimum_to_keep.member_indices!.concat(minimum.member_indices!)
@@ -239,7 +239,7 @@ function watershed_segmentation(data: WatershedInputData, max_z_diff: number): W
             // If the vertex is not connected to any local minimum then create a
             // new minimum from it.
             vertex.minimum_id = next_group_id++
-            vertex.group_ids = new Set([vertex.minimum_id])
+            vertex.watershed_ids = new Set([vertex.minimum_id])
             vertex.member_indices = [sorted_vertices_index]
             minima.push(vertex)
         }
@@ -252,21 +252,21 @@ function watershed_segmentation(data: WatershedInputData, max_z_diff: number): W
     {
         return {
             z: vertex.z,
-            group_ids: vertex.group_ids,
+            watershed_ids: vertex.watershed_ids,
             minimum_id: vertex.minimum_id,
         }
     })
 
     return {
-        width: data.width,
-        height: data.height,
+        input_width: data.width,
+        input_height: data.height,
         vertices: grouped_vertices,
-        area_count: unique_minima.length,
+        watershed_count: unique_minima.length,
     }
 }
 
 
-function normalise_watershed_group_ids(watershed: Watershed)
+function normalise_watershed_watershed_ids(watershed: Watersheds)
 {
     const group_id_map = new Map<number, number>()
 
@@ -279,12 +279,12 @@ function normalise_watershed_group_ids(watershed: Watershed)
 
     watershed.vertices.forEach(vertex =>
     {
-        const mapped_group_ids = Array.from(vertex.group_ids).map(group_id =>
+        const mapped_watershed_ids = Array.from(vertex.watershed_ids).map(group_id =>
         {
             return group_id_map.get(group_id)!
         })
 
-        vertex.group_ids = new Set(mapped_group_ids.sort())
+        vertex.watershed_ids = new Set(mapped_watershed_ids.sort())
     })
 }
 
@@ -313,7 +313,7 @@ export function factory_get_minimum_for_vertex(vertices: GroupedVertex[], lowest
 
     return (vertex: GroupedVertex) =>
     {
-        const minimum_id = lowest_minimum ? Math.min(...vertex.group_ids) : Math.max(...vertex.group_ids)
+        const minimum_id = lowest_minimum ? Math.min(...vertex.watershed_ids) : Math.max(...vertex.watershed_ids)
         const minimum = get_minimum_by_id(minimum_id)
 
         return minimum

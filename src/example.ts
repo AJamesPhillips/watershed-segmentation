@@ -37,7 +37,7 @@ if (typeof document !== "undefined")
         const watershed = construct_watershed(data, max_z_diff)
 
         const info_el = document.createElement("div")
-        info_el.textContent = `Area count: ${watershed.area_count}`
+        info_el.textContent = `Area count: ${watershed.watershed_count}`
         container_el.appendChild(info_el)
 
         const context = canvas_el.getContext("2d")!
@@ -65,7 +65,7 @@ if (typeof document !== "undefined")
         })
 
         const watershed = construct_watershed(data, max_z_diff)
-        watershed.area_count
+        watershed.watershed_count
 
         // draw_group_colours_onto_canvas(watershed, data, context, magnify)
         draw_group_colours_onto_canvas({
