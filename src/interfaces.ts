@@ -1,3 +1,4 @@
+import { WatershedHeightsInfo } from "./watersheds_graph/interfaces"
 
 
 export interface WatershedInputData
@@ -17,13 +18,13 @@ export interface Vertex
 export interface WatershedMinimum
 {
     member_indices: number[]
-    minimum_id: number
+    watershed_id: number
 }
 
 
 export function is_watershed_minimum<U extends Partial<WatershedMinimum>, T extends U & WatershedMinimum>(obj: U): obj is T
 {
-    return obj.minimum_id !== undefined
+    return obj.watershed_id !== undefined
 }
 
 export interface GroupedVertex extends Partial<WatershedMinimum>
@@ -33,13 +34,6 @@ export interface GroupedVertex extends Partial<WatershedMinimum>
     watershed_ids: Set<number>
 }
 
-interface WatershedArea
-{
-    // area: number
-    // perimeter: number
-    // centroid: {x: number, y: number}
-    vertices: Vertex[]
-}
 
 export interface Watersheds
 {

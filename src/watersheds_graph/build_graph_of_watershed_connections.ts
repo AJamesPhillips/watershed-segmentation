@@ -4,8 +4,10 @@ import { Exit, Id } from "./interfaces"
 
 export function build_graph_of_watershed_connections(watershed: Watersheds, exits: Exit[]): Map<number, Map<number, (Vertex & Id)>>
 {
+    if (exits.length === 0) throw new Error(`Must provide at least one exit for building watershed connections graph`)
+
     const connections = get_empty_connections_map(watershed.watershed_count)
-    mutate_connections_with_exits(watershed, exits, connections)
+    // mutate_connections_with_exits(watershed, exits, connections)
 
     for(let x = 0; x < watershed.input_width; ++x)
     {
@@ -38,23 +40,23 @@ function get_empty_connections_map(watershed_count: number)
 {
     const connections: Map<number, Map<number, (Vertex & Id)>> = new Map()
 
-    for(let minimum_id = 0; minimum_id < watershed_count; ++minimum_id)
+    for(let watershed_id = 0; watershed_id < watershed_count; ++watershed_id)
     {
-        connections.set(minimum_id, new Map())
+        connections.set(watershed_id, new Map())
     }
 
     return connections
 }
 
 
-function mutate_connections_with_exits(watershed: Watersheds, exits: Exit[], connections: Map<number, Map<number, (Vertex & Id)>>)
-{
-    exits.forEach(exit =>
-    {
-        const vertex = watershed.vertices[exit.x + exit.y * watershed.input_width]
-        vertex.watershed_ids.forEach(watershed_id =>
-        {
-            connections.get(watershed_id)!.set(exit.id, exit)
-        })
-    })
-}
+// function mutate_connections_with_exits(watershed: Watersheds, exits: Exit[], connections: Map<number, Map<number, (Vertex & Id)>>)
+// {
+//     exits.forEach(exit =>
+//     {
+//         const vertex = watershed.vertices[exit.x + exit.y * watershed.input_width]
+//         vertex.watershed_ids.forEach(watershed_id =>
+//         {
+//             connections.get(watershed_id)!.set(exit.id, exit)
+//         })
+//     })
+// }

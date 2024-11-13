@@ -1,5 +1,5 @@
 
-import { GroupedVertex, Watersheds } from "./interfaces"
+import { GroupedVertex, WatershedInputData, Watersheds } from "./interfaces"
 import {
     fixture_input_data_1,
     fixture_input_data_1b,
@@ -8,7 +8,7 @@ import {
 } from "./test_fixtures"
 import {
     construct_watersheds,
-    factory_get_minimum_by_id_from_vertices,
+    factory_get_watershed_minimum_by_id_from_vertices,
     factory_get_minimum_for_vertex,
 }  from "./watersheds"
 
@@ -26,11 +26,11 @@ describe("watershed functions", () =>
         expect(watershed.watershed_count).toBe(2)
     })
 
-    test("factory_get_minimum_by_id_from_vertices", () =>
+    test("factory_get_watershed_minimum_by_id_from_vertices", () =>
     {
-        const get_minimum_by_id = factory_get_minimum_by_id_from_vertices(watershed.vertices)
-        expect(get_minimum_by_id(0)).toBe(watershed.vertices[0])
-        expect(get_minimum_by_id(1)).toBe(watershed.vertices[8])
+        const get_watershed_minimum_by_id = factory_get_watershed_minimum_by_id_from_vertices(watershed.vertices)
+        expect(get_watershed_minimum_by_id(0)).toBe(watershed.vertices[0])
+        expect(get_watershed_minimum_by_id(1)).toBe(watershed.vertices[8])
     })
 
     test("factory_get_minimum_for_vertex", () =>
@@ -69,7 +69,7 @@ describe("watershed_segmentation", () =>
             let row_string = ""
             for (let i = 0; i < watershed.watershed_count; i++)
             {
-                const is_minima = vertex.minimum_id !== undefined ? "*" : " "
+                const is_minima = vertex.watershed_id !== undefined ? "*" : " "
                 row_string += vertex.watershed_ids.has(i) ? `${is_minima}${i}` : "  "
             }
             return row_string
@@ -161,6 +161,23 @@ describe("watershed_segmentation", () =>
             " 0  | 0  | 0 1|   1|   1",
             " 0  | 0  | 0 1|   1|   1",
             " 0  | 0  | 0 1|   1|   1",
+        ])
+    })
+
+    test("flattens negative numbers", () =>
+    {
+        const image_data: WatershedInputData = {
+            image_data: new Uint8ClampedArray([
+                0, -1, 0, -1, 0
+            ]),
+            width: 5,
+            height: 1
+        }
+        const watershed = construct_watersheds(image_data)
+        expect(watershed.watershed_count).toBe(1)
+        const simplified = simplify_watershed_vertices(watershed)
+        expect(simplified).toStrictEqual([
+            "*0| 0| 0| 0| 0",
         ])
     })
 })

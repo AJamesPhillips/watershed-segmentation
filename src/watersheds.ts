@@ -144,6 +144,12 @@ function factory_get_2d_array_value<U>(data: { image_data: U[], width: number, h
 
 function watershed_segmentation(data: WatershedInputData, max_z_diff: number): Watersheds
 {
+    // Double check that the image data 2D array fits with the width and height
+    if (data.image_data.length !== data.width * data.height)
+    {
+        throw new Error(`Image data length (${data.image_data.length}) does not match width * height of ${data.width * data.height} (${data.width} * ${data.height})`)
+    }
+
     let next_watershed_id = 0
     const minima: (GroupedVertex & Vertex)[] = []
 
@@ -232,13 +238,14 @@ function watershed_segmentation(data: WatershedInputData, max_z_diff: number): W
                     minimum.member_indices!.forEach(index =>
                     {
                         const member_vertex = sorted_vertices[index]
-                        member_vertex.watershed_ids.delete(minimum.minimum_id!)
-                        member_vertex.watershed_ids.add(minimum_to_keep.minimum_id!)
+                        member_vertex.watershed_ids.delete(minimum.watershed_id!)
+                        if (minimum_to_keep.watershed_id === undefined) throw new Error(`minimum_to_keep.watershed_id is undefined`)
+                        member_vertex.watershed_ids.add(minimum_to_keep.watershed_id!)
                     })
 
                     minimum_to_keep.member_indices = minimum_to_keep.member_indices!.concat(minimum.member_indices!)
                     minimum.member_indices = undefined
-                    minimum.minimum_id = undefined
+                    minimum.watershed_id = undefined
                 })
             }
         }
@@ -246,23 +253,25 @@ function watershed_segmentation(data: WatershedInputData, max_z_diff: number): W
         {
             // If the vertex is not connected to any local minimum then create a
             // new minimum from it.
-            vertex.minimum_id = next_watershed_id++
-            vertex.watershed_ids = new Set([vertex.minimum_id])
+            vertex.watershed_id = next_watershed_id++
+            vertex.watershed_ids = new Set([vertex.watershed_id])
             vertex.member_indices = [sorted_vertices_index]
             minima.push(vertex)
         }
     })
 
     // Remove minima which were merged into other minima
-    const unique_minima = minima.filter(minimum => minimum.minimum_id !== undefined)
+    const unique_minima = minima.filter(minimum => minimum.watershed_id !== undefined)
 
     const grouped_vertices: GroupedVertex[] = vertices.map(vertex =>
     {
-        return {
+        const grouped_vertex: GroupedVertex ={
             z: vertex.z,
             watershed_ids: vertex.watershed_ids,
-            minimum_id: vertex.minimum_id,
+            watershed_id: vertex.watershed_id,
         }
+
+        return grouped_vertex
     })
 
     return {
@@ -281,8 +290,8 @@ function normalise_watershed_ids(watersheds: Watersheds)
     const minima = get_minima_from_vertices(watersheds.vertices)
     minima.forEach((minimum, index) =>
     {
-        watershed_id_map.set(minimum.minimum_id!, index)
-        minimum.minimum_id = index
+        watershed_id_map.set(minimum.watershed_id!, index)
+        minimum.watershed_id = index
     })
 
     watersheds.vertices.forEach(vertex =>
@@ -305,24 +314,25 @@ export function get_minima_from_vertices(vertices: GroupedVertex[], sorted = tru
 }
 
 
-export function factory_get_minimum_by_id_from_vertices(vertices: GroupedVertex[]): (minimum_id: number) => (GroupedVertex & WatershedMinimum)
+export type GetWatershedMinimumById = (watershed_id: number) => (GroupedVertex & WatershedMinimum)
+export function factory_get_watershed_minimum_by_id_from_vertices(vertices: GroupedVertex[]): GetWatershedMinimumById
 {
     const minima = get_minima_from_vertices(vertices)
-    const map_minima_id_to_minima: {[id: number]: (GroupedVertex & WatershedMinimum)} = {}
-    minima.forEach(m => map_minima_id_to_minima[m.minimum_id] = m)
+    const map_watershed_id_to_minima: {[id: number]: (GroupedVertex & WatershedMinimum)} = {}
+    minima.forEach(m => map_watershed_id_to_minima[m.watershed_id] = m)
 
-    return (minimum_id: number) => map_minima_id_to_minima[minimum_id]
+    return (watershed_id: number) => map_watershed_id_to_minima[watershed_id]
 }
 
 
 export function factory_get_minimum_for_vertex(vertices: GroupedVertex[], lowest_minimum: boolean = true): (vertex: GroupedVertex) => (GroupedVertex & WatershedMinimum)
 {
-    const get_minimum_by_id = factory_get_minimum_by_id_from_vertices(vertices)
+    const get_watershed_minimum_by_id = factory_get_watershed_minimum_by_id_from_vertices(vertices)
 
     return (vertex: GroupedVertex) =>
     {
-        const minimum_id = lowest_minimum ? Math.min(...vertex.watershed_ids) : Math.max(...vertex.watershed_ids)
-        const minimum = get_minimum_by_id(minimum_id)
+        const watershed_id = lowest_minimum ? Math.min(...vertex.watershed_ids) : Math.max(...vertex.watershed_ids)
+        const minimum = get_watershed_minimum_by_id(watershed_id)
 
         return minimum
     }

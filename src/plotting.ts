@@ -133,7 +133,7 @@ function mark_watershed_minimum (args: MarkWatershedMinimumArgs)
 
     iterate_2d_data({ image_data: watershed.vertices, width: data.width, height: data.height }, (x, y, element) =>
     {
-        if (element.minimum_id === undefined) return
+        if (element.watershed_id === undefined) return
 
         context.fillStyle = "rgba(0, 0, 0, 0.5)"
         const size = 2
